@@ -60,8 +60,27 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
-        # Write value iteration code here
-        "*** YOUR CODE HERE ***"
+        """
+        Executa a iteração de valor para o número especificado de iterações.
+        Atualiza os valores dos estados com base na equação de Bellman.
+        """
+        for _ in range(self.iterations):                   
+            updated = util.Counter()                                # Criar um novo Counter para armazenar os valores atualizados dos estados
+
+            for state in self.mdp.getStates():                      # Loop para cada estado do MDP
+                actions = self.mdp.getPossibleActions(state)        # Obter as ações possíveis para o estado atual
+                if not actions:                                     # Se não houver ações possíveis, continue para o próximo estado
+                    continue
+
+                # Calcular o valor máximo para o estado atual com base nas ações possíveis
+                best = float("-inf")
+                for action in actions:
+                    value = self.computeQValueFromValues(state, action)
+                    if value > best:
+                        best = value
+                updated[state] = best
+
+            self.values = updated                             # Atualizar os valores dos estados com os valores atualizados
 
 
     def getValue(self, state):
@@ -76,8 +95,14 @@ class ValueIterationAgent(ValueEstimationAgent):
           Compute the Q-value of action in state from the
           value function stored in self.values.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        q_value = 0                                                             # Inicializar o Q-valor para a ação no estado atual
+        transitions = self.mdp.getTransitionStatesAndProbs(state, action)       # Obter os estados de transição e suas probabilidades para a ação no estado atual
+        for next, probability in transitions:                                   # Loop para cada estado de transição e sua probabilidade
+            reward = self.mdp.getReward(state, action, next)                    # Obter a recompensa para a transição do estado atual para o próximo estado com a ação atual
+            q_value += probability * (
+                reward + self.discount * self.values[next]
+            )                                                                   # Calcular o Q-valor acumulando a recompensa ponderada pela probabilidade e o valor descontado do próximo estado
+        return q_value
 
     def computeActionFromValues(self, state):
         """
@@ -88,8 +113,18 @@ class ValueIterationAgent(ValueEstimationAgent):
           there are no legal actions, which is the case at the
           terminal state, you should return None.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        actions = self.mdp.getPossibleActions(state)                            # Obter as ações possíveis para o estado atual
+        if not actions:                                                         # Se não houver ações possíveis, retornar None (estado terminal)
+            return None
+
+        best_action = actions[0]                                                 # Inicializar a melhor ação como a primeira ação possível
+        best_value = self.computeQValueFromValues(state, best_action)            # Calcular o valor da melhor ação inicial usando a função computeQValueFromValues
+        for action in actions[1:]:                                               # Loop para cada ação possível (exceto a primeira)
+            value = self.computeQValueFromValues(state, action)        
+            if value > best_value:
+                best_action = action
+                best_value = value
+        return best_action
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
@@ -121,4 +156,3 @@ class PrioritizedSweepingValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
-
